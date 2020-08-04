@@ -13,8 +13,8 @@ const clusters = [
       y: 3,
     },
     dimensions: {
-      x: 100,
-      y: 100,
+      x: 70,
+      y: 70,
     },
   },
   {
@@ -27,8 +27,50 @@ const clusters = [
       y: 3,
     },
     dimensions: {
-      x: 500,
-      y: 500,
+      x: 300,
+      y: 300,
+    },
+  },
+  {
+    value: 1,
+    pow: 7,
+    visual: {},
+    meta: {
+      title: "One Kiloton",
+      x: 3,
+      y: 3,
+    },
+    dimensions: {
+      x: 1000,
+      y: 1000,
+    },
+  },
+  {
+    value: 1,
+    pow: 9,
+    visual: {},
+    meta: {
+      title: "One Megaton",
+      x: 3,
+      y: 3,
+    },
+    dimensions: {
+      x: 5000,
+      y: 5000,
+    },
+  },
+  {
+    value: 1,
+    pow: 11,
+    visual: {},
+    meta: {
+      title: "One Gigaton",
+      x: 3,
+      y: 3,
+    },
+    dimensions: {
+      x: 40000,
+      y: 40000,
     },
   },
 ];

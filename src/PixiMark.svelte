@@ -12,7 +12,7 @@
     const particle = Sprite.from(texture);
     particle.x = x;
     particle.y = y;
-    particle.anchor.set(0.5);
+    particle.anchor.set(0);
     particle.width = size;
     particle.height = size;
     parent.addChild(particle);
