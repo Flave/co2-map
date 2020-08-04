@@ -6,13 +6,15 @@
   export let x;
   export let y;
   export let parent;
+  export let size = 1;
 
   const draw = () => {
     const particle = Sprite.from(texture);
     particle.x = x;
     particle.y = y;
     particle.anchor.set(0.5);
-    particle.scale.set(0.001);
+    particle.width = size;
+    particle.height = size;
     parent.addChild(particle);
     return particle;
   };

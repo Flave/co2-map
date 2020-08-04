@@ -12,6 +12,7 @@
   export let transform;
   export let width;
   export let height;
+  export let children;
   const dpRatio = devicePixelRatio;
   $: cWidth = width * dpRatio;
   $: cHeight = height * dpRatio;
@@ -78,10 +79,17 @@
 </style>
 
 <canvas class="layer" bind:this={canvasRef}>
-  {#each marks as mark}
-    <PixiMark
-      x={mark[0] * cWidth}
-      y={mark[1] * cHeight}
-      parent={particleContainer} />
+  {#each children as { Canvas, visual, value, dimensions, markSize }}
+    {#if Canvas}
+      <Canvas parent={particleContainer} />
+    {:else if visual}
+      {#each Array.from({ length: value }) as d, i}
+        <PixiMark
+          x={dimensions.x + (i % 10) * markSize * 1.5}
+          y={dimensions.y + Math.floor(i / 10) * markSize * 1.5}
+          size={markSize}
+          parent={particleContainer} />
+      {/each}
+    {/if}
   {/each}
 </canvas>
