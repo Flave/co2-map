@@ -3,6 +3,10 @@
   export let width;
   export let height;
   export let children;
+
+  const handleClick = () => {
+    console.log("clicked");
+  };
 </script>
 
 <style>
@@ -16,6 +20,16 @@
   .fixed-size {
     transform-origin: top left;
   }
+
+  .svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .rect {
+    fill: red;
+  }
 </style>
 
 <div
@@ -23,6 +37,9 @@
   {width}
   {height}
   style={`transform: translate(${transform.x}px, ${transform.y}px) scale(${transform.k});`}>
+  <svg class="svg" transform={`translate(200, 200)`}>
+    <rect on:click={handleClick} width={100} height={100} class="rect" />
+  </svg>
   {#each children as { Html, meta, dimensions, magnitude }}
     {#if Html}
       <Html />

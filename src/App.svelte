@@ -1,5 +1,11 @@
 <script>
   import { onMount, tick } from "svelte";
+  import {
+    parseQuery,
+    stringifyQuery,
+    getViewFromTransform,
+    getTransformFromView
+  } from "Utils";
   import { tweened } from "svelte/motion";
   import {
     zoom as d3Zoom,
@@ -43,30 +49,37 @@
       view: [60000, 60000, 1000000]
     }
   ];
+
+  const stateToUrl = () => {
+    const view = getViewFromTransform(d3Event.transform, width, height);
+    history.pushState(null, "", `?${stringifyQuery({ view })}`);
+  };
+
+  const urlToState = () => {
+    const urlState = parseQuery(location.search);
+    const transform = getTransformFromView(urlState.view, width, height);
+    return {
+      transform
+    };
+  };
+
   const zoom = d3Zoom()
     .scaleExtent([0.001, 10])
-    .on("zoom", () => {
-      transform = d3Event.transform;
-    });
+    .on("zoom", () => (transform = d3Event.transform))
+    .on("end", () => stateToUrl());
 
   onMount(async () => {
+    const urlState = urlToState();
     const selection = d3Select(zoomable);
-    selection.call(zoom).call(zoom.transform, transform);
+    selection.call(zoom).call(zoom.transform, urlState.transform || transform);
   });
 
-  function getTransformFromView(view) {
-    const k = Math.min(width, height) / view[2];
-    const x = width / 2 - view[0] * k;
-    const y = height / 2 - view[1] * k;
-    return d3ZoomIdentity.translate(x, y).scale(k);
-  }
-
   const handleClick = view => {
-    const transformTo = getTransformFromView(view);
+    const transformTo = getTransformFromView(view, width, height);
     const zoomIn = transform.k < transformTo.k;
     let scaleRatio = transformTo.k / transform.k;
     if (!zoomIn) scaleRatio = 1 / scaleRatio;
-    const duration = Math.pow(scaleRatio, 0.2) * 300;
+    const duration = Math.pow(scaleRatio, 0.25) * 300;
     d3Select(zoomable)
       .transition()
       .duration(duration)
@@ -90,7 +103,7 @@
   }
 
   .btn {
-    font-size: 10;
+    font-size: 12px;
     background: #444;
     color: #fff;
     border: none;
@@ -105,12 +118,12 @@
   bind:clientHeight={height}>
   <CanvasLayer {transform} {width} {height} children={clusters} />
   <SvgLayer {width} {height} {transform} />
-  <!--<HtmlLayer {width} {height} {transform} children={clusters} />-->
+  <HtmlLayer {width} {height} {transform} children={clusters} />
 </div>
-<!--<div class="btns">
+<div class="btns">
   {#each levels as level}
     <button class="btn" on:click={() => handleClick(level.view)}>
       {level.label}
     </button>
   {/each}
-</div> -->
+</div>

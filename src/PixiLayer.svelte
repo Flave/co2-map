@@ -68,8 +68,6 @@
     if (!app) return;
     render();
   });
-
-  $: console.log(width, height);
 </script>
 
 <style>

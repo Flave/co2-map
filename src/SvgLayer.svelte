@@ -19,16 +19,5 @@
 </style>
 
 <svg class="layer" {width} {height}>
-  <g {transform}>
-    <g transform={`translate(3500, 70)`}>
-      {#each marks as d, i}
-        <rect
-          class="circle"
-          width={size}
-          height={size}
-          x={(i % 50) * size * 1.5}
-          y={Math.floor(i / 50) * size * 1.5} />
-      {/each}
-    </g>
-  </g>
+  <g {transform} />
 </svg>
