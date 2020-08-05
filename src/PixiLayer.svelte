@@ -21,7 +21,7 @@
 
   const graphics = new Graphics();
   graphics.beginFill(0x000000, 1);
-  graphics.drawCircle(0, 0, 200);
+  graphics.drawRect(0, 0, 2048, 2048);
   graphics.endFill();
   let particleTexture;
 
@@ -68,6 +68,8 @@
     if (!app) return;
     render();
   });
+
+  $: console.log(width, height);
 </script>
 
 <style>
@@ -85,8 +87,8 @@
     {:else if visual}
       {#each Array.from({ length: value }) as d, i}
         <PixiMark
-          x={dimensions.x + (i % 10) * markSize * 1.5}
-          y={dimensions.y + Math.floor(i / 10) * markSize * 1.5}
+          x={dimensions.x + (i % 50) * markSize * 1.5}
+          y={dimensions.y + Math.floor(i / 50) * markSize * 1.5}
           size={markSize}
           parent={particleContainer} />
       {/each}

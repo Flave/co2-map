@@ -1,6 +1,12 @@
 <script>
   import { onMount, tick } from "svelte";
-  import { zoom as d3Zoom, zoomIdentity as d3ZoomIdentity } from "d3-zoom";
+  import { tweened } from "svelte/motion";
+  import {
+    zoom as d3Zoom,
+    zoomTransform as d3ZoomTransform,
+    zoomIdentity as d3ZoomIdentity
+  } from "d3-zoom";
+  import { interpolateZoom as d3InterpolateZoom } from "d3-interpolate";
   import { select as d3Select, event as d3Event } from "d3-selection";
   import CanvasLayer from "./PixiLayer";
   import SvgLayer from "./SvgLayer";
@@ -8,19 +14,64 @@
   import clusters from "./clusters";
 
   let zoomable;
-  let transform = d3ZoomIdentity;
+  let transform = d3ZoomIdentity.scale(0.1);
   let width = 800;
   let height = 800;
+  const levels = [
+    {
+      label: "Grams",
+      view: [10, 10, 50]
+    },
+    {
+      label: "Kilograms",
+      view: [70, 70, 400]
+    },
+    {
+      label: "Tons",
+      view: [300, 300, 2000]
+    },
+    {
+      label: "Kilotons",
+      view: [1500, 1500, 25000]
+    },
+    {
+      label: "Megatons",
+      view: [6000, 6000, 100000]
+    },
+    {
+      label: "Gigatons",
+      view: [60000, 60000, 1000000]
+    }
+  ];
+  const zoom = d3Zoom()
+    .scaleExtent([0.001, 10])
+    .on("zoom", () => {
+      transform = d3Event.transform;
+    });
 
   onMount(async () => {
-    d3Select(zoomable).call(
-      d3Zoom()
-        .scaleExtent([0.0001, 10])
-        .on("zoom", () => {
-          transform = d3Event.transform;
-        })
-    );
+    const selection = d3Select(zoomable);
+    selection.call(zoom).call(zoom.transform, transform);
   });
+
+  function getTransformFromView(view) {
+    const k = Math.min(width, height) / view[2];
+    const x = width / 2 - view[0] * k;
+    const y = height / 2 - view[1] * k;
+    return d3ZoomIdentity.translate(x, y).scale(k);
+  }
+
+  const handleClick = view => {
+    const transformTo = getTransformFromView(view);
+    const zoomIn = transform.k < transformTo.k;
+    let scaleRatio = transformTo.k / transform.k;
+    if (!zoomIn) scaleRatio = 1 / scaleRatio;
+    const duration = Math.pow(scaleRatio, 0.2) * 300;
+    d3Select(zoomable)
+      .transition()
+      .duration(duration)
+      .call(zoom.transform, transformTo);
+  };
 </script>
 
 <style>
@@ -28,6 +79,22 @@
     position: relative;
     width: 100%;
     height: 100%;
+    overflow: hidden;
+  }
+  .btns {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .btn {
+    font-size: 10;
+    background: #444;
+    color: #fff;
+    border: none;
+    border-radius: 100px;
   }
 </style>
 
@@ -38,5 +105,12 @@
   bind:clientHeight={height}>
   <CanvasLayer {transform} {width} {height} children={clusters} />
   <SvgLayer {width} {height} {transform} />
-  <HtmlLayer {width} {height} {transform} children={clusters} />
+  <!--<HtmlLayer {width} {height} {transform} children={clusters} />-->
 </div>
+<!--<div class="btns">
+  {#each levels as level}
+    <button class="btn" on:click={() => handleClick(level.view)}>
+      {level.label}
+    </button>
+  {/each}
+</div> -->
