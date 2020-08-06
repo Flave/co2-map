@@ -1,12 +1,13 @@
 <script>
   import HtmlContainer from "./HtmlContainer";
+  import { selection } from "App/state";
   export let transform;
   export let width;
   export let height;
   export let children;
 
-  const handleClick = () => {
-    console.log("clicked");
+  const handleSelect = id => {
+    selection.set(id);
   };
 </script>
 
@@ -41,7 +42,7 @@
   {#each children as { Html, id, meta, x, y, magnitude }}
     {#if Html}
       <HtmlContainer {transform} {x} {y}>
-        <Html {transform} />
+        <Html {transform} onSelect={handleSelect} />
       </HtmlContainer>
     {:else if meta}
       <div

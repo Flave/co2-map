@@ -14,15 +14,9 @@
   } from "d3-zoom";
   import { interpolateZoom as d3InterpolateZoom } from "d3-interpolate";
   import { select as d3Select, event as d3Event } from "d3-selection";
-  import CanvasLayer from "./PixiLayer";
-  import SvgLayer from "./SvgLayer";
-  import HtmlLayer from "./HtmlLayer";
-  import clusters from "./clusters";
+  import ZoomCanvas from "./ZoomCanvas";
+  import { selection, transform, width, height } from "./state";
 
-  let zoomable;
-  let transform = d3ZoomIdentity.scale(0.1);
-  let width = 800;
-  let height = 800;
   const levels = [
     {
       label: "Grams",
@@ -63,37 +57,12 @@
     };
   };
 
-  const zoom = d3Zoom()
-    .scaleExtent([0.00001, 14])
-    .on("zoom", () => (transform = d3Event.transform))
-    .on("end", () => stateToUrl());
-
-  onMount(async () => {
-    const urlState = urlToState();
-    const selection = d3Select(zoomable);
-    selection.call(zoom).call(zoom.transform, urlState.transform || transform);
-  });
-
   const handleClick = view => {
-    const transformTo = getTransformFromView(view, width, height);
-    const zoomIn = transform.k < transformTo.k;
-    let scaleRatio = transformTo.k / transform.k;
-    if (!zoomIn) scaleRatio = 1 / scaleRatio;
-    const duration = Math.pow(scaleRatio, 0.16) * 400;
-    d3Select(zoomable)
-      .transition()
-      .duration(duration)
-      .call(zoom.transform, transformTo);
+    $transform = getTransformFromView(view, $width, $height);
   };
 </script>
 
 <style>
-  .container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
   .btns {
     position: absolute;
     top: 0;
@@ -111,15 +80,7 @@
   }
 </style>
 
-<div
-  class="container"
-  bind:this={zoomable}
-  bind:clientWidth={width}
-  bind:clientHeight={height}>
-  <CanvasLayer {transform} {width} {height} children={clusters} />
-  <SvgLayer {width} {height} {transform} />
-  <HtmlLayer {width} {height} {transform} children={clusters} />
-</div>
+<ZoomCanvas />
 <div class="btns">
   {#each levels as level}
     <button class="btn" on:click={() => handleClick(level.view)}>

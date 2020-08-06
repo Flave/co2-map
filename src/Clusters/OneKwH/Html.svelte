@@ -4,6 +4,7 @@
   import { fade } from "svelte/transition";
   import { onMount } from "svelte";
   export let transform;
+  export let onSelect;
   const gap = 2;
   const items = data
     .sort((a, b) => a.value - b.value)
@@ -66,6 +67,7 @@
         <div
           transition:fade
           class="text"
+          on:click={() => onSelect(item.id)}
           style={`transform: translate(${item.x}px, ${i % 2 === 0 ? item.size + 2 : -2}px);`}>
           <div class="label">{item.label}</div>
           <div class="value">{item.value}g CO₂</div>

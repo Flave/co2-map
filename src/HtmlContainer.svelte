@@ -15,7 +15,7 @@
     height = rootRef.clientHeight;
   });
 
-  $: console.log(width, height);
+  //$: console.log(width, height);
 </script>
 
 <style>
