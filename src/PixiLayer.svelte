@@ -79,14 +79,14 @@
 </style>
 
 <canvas class="layer" bind:this={canvasRef}>
-  {#each children as { Canvas, visual, value, dimensions, markSize }}
+  {#each children as { Canvas, visual, value, x, y, markSize }}
     {#if Canvas}
       <Canvas parent={particleContainer} />
     {:else if visual}
       {#each Array.from({ length: value }) as d, i}
         <PixiMark
-          x={dimensions.x + (i % 50) * markSize * 1.5}
-          y={dimensions.y + Math.floor(i / 50) * markSize * 1.5}
+          x={x + (i % 50) * markSize * 1.5}
+          y={y + Math.floor(i / 50) * markSize * 1.5}
           size={markSize}
           parent={particleContainer} />
       {/each}

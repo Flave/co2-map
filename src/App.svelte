@@ -30,23 +30,23 @@
     },
     {
       label: "Kilograms",
-      view: [70, 70, 400]
+      view: [170, 170, 400]
     },
     {
       label: "Tons",
-      view: [300, 300, 2000]
+      view: [300, 300, 5000]
     },
     {
       label: "Kilotons",
-      view: [1500, 1500, 25000]
+      view: [5000, 5000, 150000]
     },
     {
       label: "Megatons",
-      view: [6000, 6000, 100000]
+      view: [50000, 50000, 5000000]
     },
     {
       label: "Gigatons",
-      view: [60000, 60000, 1000000]
+      view: [1500000, 1500000, 100000000]
     }
   ];
 
@@ -64,7 +64,7 @@
   };
 
   const zoom = d3Zoom()
-    .scaleExtent([0.001, 10])
+    .scaleExtent([0.00001, 14])
     .on("zoom", () => (transform = d3Event.transform))
     .on("end", () => stateToUrl());
 
@@ -79,7 +79,7 @@
     const zoomIn = transform.k < transformTo.k;
     let scaleRatio = transformTo.k / transform.k;
     if (!zoomIn) scaleRatio = 1 / scaleRatio;
-    const duration = Math.pow(scaleRatio, 0.25) * 300;
+    const duration = Math.pow(scaleRatio, 0.16) * 400;
     d3Select(zoomable)
       .transition()
       .duration(duration)

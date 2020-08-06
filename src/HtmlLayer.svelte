@@ -1,4 +1,5 @@
 <script>
+  import HtmlContainer from "./HtmlContainer";
   export let transform;
   export let width;
   export let height;
@@ -37,16 +38,15 @@
   {width}
   {height}
   style={`transform: translate(${transform.x}px, ${transform.y}px) scale(${transform.k});`}>
-  <svg class="svg" transform={`translate(200, 200)`}>
-    <rect on:click={handleClick} width={100} height={100} class="rect" />
-  </svg>
-  {#each children as { Html, meta, dimensions, magnitude }}
+  {#each children as { Html, id, meta, x, y, magnitude }}
     {#if Html}
-      <Html />
+      <HtmlContainer {transform} {x} {y}>
+        <Html {transform} />
+      </HtmlContainer>
     {:else if meta}
       <div
         class="fixed-size"
-        style={`transform: translate(${dimensions.x + meta.x}px, ${dimensions.y + meta.y}px) scale(${Math.pow(magnitude, 0.4) / 10});`}>
+        style={`transform: translate(${x + meta.x}px, ${y + meta.y}px) scale(${Math.pow(magnitude, 0.4) / 10});`}>
         {meta.title}
       </div>
     {/if}
