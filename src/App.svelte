@@ -17,8 +17,8 @@
   import ZoomCanvas from "./ZoomCanvas";
   import {
     selection,
+    targetTransform,
     transform,
-    currentTransform,
     width,
     height
   } from "./state";
@@ -52,31 +52,31 @@
 
   const urlToState = () => {
     const urlState = parseQuery(location.search);
-    const transform = getTransformFromView(urlState.view, $width, $height);
-    return {
-      transform
-    };
+    $targetTransform = getTransformFromView(urlState.view, $width, $height);
+    $selection = urlState.selection;
   };
 
-  // $: (() => {
-  //   const view = getViewFromTransform($transform, $width, $height);
-  //   console.log(view);
-  //   history.pushState(null, "", `?${stringifyQuery({ view })}`);
-  // })();
+  // Reactively upate url when any relevant state changes
+  $: (() => {
+    if (!$targetTransform) return;
+    const view = getViewFromTransform($targetTransform, $width, $height);
+    const queryString = `?${stringifyQuery({ view, selection: $selection })}`;
+    if (queryString !== location.search) {
+      history.pushState(null, "", queryString);
+    }
+  })();
 
   onMount(() => {
-    const urlState = urlToState();
-    //$currentTransform = urlState.transform;
-    $transform = urlState.transform;
+    // Parse state from url
+    urlToState();
 
     window.addEventListener("popstate", e => {
-      //console.log(e);
-      const urlState = urlToState();
+      urlToState();
     });
   });
 
   const handleClick = view => {
-    $transform = getTransformFromView(view, $width, $height);
+    $targetTransform = getTransformFromView(view, $width, $height);
   };
 </script>
 

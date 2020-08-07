@@ -11,7 +11,7 @@ export const parseQuery = (query) =>
 export const stringifyQuery = (obj) => stringify(obj, { arrayFormat: "comma" });
 
 export const getTransformFromView = (view, width, height) => {
-  if (!view) return;
+  if (!view) return d3ZoomIdentity;
   const k = Math.min(width, height) / view[2];
   const x = width / 2 - view[0] * k;
   const y = height / 2 - view[1] * k;

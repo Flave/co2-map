@@ -9,7 +9,7 @@
   import SvgLayer from "./SvgLayer";
   import HtmlLayer from "./HtmlLayer";
 
-  import { transform, currentTransform, width, height } from "App/state";
+  import { targetTransform, transform, width, height } from "App/state";
 
   let zoomable;
   let transitioning = false;
@@ -17,31 +17,18 @@
   const zoom = d3Zoom()
     .scaleExtent([0.00001, 14])
     .on("zoom", () => {
-      $currentTransform = d3Event.transform;
+      $transform = d3Event.transform;
     })
     .on("end", () => {
       // needed because
       if (transitioning) return;
-      $transform = d3Event.transform;
+      $targetTransform = d3Event.transform;
     });
 
   onMount(async () => {
     const selection = d3Select(zoomable);
-    selection.call(zoom).call(zoom.transform, $currentTransform);
+    selection.call(zoom).call(zoom.transform, $transform);
   });
-
-  $: (() => {
-    if (!zoomable) return;
-    const nodeTransform = d3ZoomTransform(zoomable);
-    if (
-      nodeTransform.k === $currentTransform.k &&
-      nodeTransform.x === $currentTransform.x &&
-      nodeTransform.y === $currentTransform.y
-    ) {
-      return;
-    }
-    d3Select(zoomable).call(zoom.transform, $currentTransform);
-  })();
 
   $: (() => {
     if (!zoomable) return;
@@ -53,11 +40,24 @@
     ) {
       return;
     }
+    d3Select(zoomable).call(zoom.transform, $transform);
+  })();
+
+  $: (() => {
+    if (!zoomable) return;
+    const nodeTransform = d3ZoomTransform(zoomable);
+    if (
+      nodeTransform.k === $targetTransform.k &&
+      nodeTransform.x === $targetTransform.x &&
+      nodeTransform.y === $targetTransform.y
+    ) {
+      return;
+    }
     // needed because otherwise it will keep playing for another couple of frames
     // which messes up the equality check...
     d3Select(zoomable).interrupt();
-    const zoomIn = nodeTransform.k < $transform.k;
-    let scaleRatio = $transform.k / nodeTransform.k;
+    const zoomIn = nodeTransform.k < $targetTransform.k;
+    let scaleRatio = $targetTransform.k / nodeTransform.k;
     if (!zoomIn) scaleRatio = 1 / scaleRatio;
     const duration = Math.pow(scaleRatio, 0.16) * 400;
     d3Select(zoomable)
@@ -65,7 +65,7 @@
       .on("start", () => (transitioning = true))
       .on("end", () => (transitioning = false))
       .duration(duration)
-      .call(zoom.transform, $transform);
+      .call(zoom.transform, $targetTransform);
   })();
 </script>
 
@@ -83,9 +83,9 @@
   bind:this={zoomable}
   bind:clientWidth={$width}
   bind:clientHeight={$height}>
-  {#if $currentTransform}
+  {#if $transform}
     <CanvasLayer
-      transform={$currentTransform}
+      transform={$transform}
       width={$width}
       height={$height}
       children={clusters} />
@@ -93,7 +93,7 @@
     <HtmlLayer
       width={$width}
       height={$height}
-      transform={$currentTransform}
+      transform={$transform}
       children={clusters} />
   {/if}
 </div>
