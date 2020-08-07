@@ -1,5 +1,5 @@
 <script>
-  import { onMount, tick } from "svelte";
+  import { onMount, afterUpdate, tick } from "svelte";
   import {
     parseQuery,
     stringifyQuery,
@@ -15,7 +15,13 @@
   import { interpolateZoom as d3InterpolateZoom } from "d3-interpolate";
   import { select as d3Select, event as d3Event } from "d3-selection";
   import ZoomCanvas from "./ZoomCanvas";
-  import { selection, transform, width, height } from "./state";
+  import {
+    selection,
+    transform,
+    currentTransform,
+    width,
+    height
+  } from "./state";
 
   const levels = [
     {
@@ -44,18 +50,30 @@
     }
   ];
 
-  const stateToUrl = () => {
-    const view = getViewFromTransform(d3Event.transform, width, height);
-    history.pushState(null, "", `?${stringifyQuery({ view })}`);
-  };
-
   const urlToState = () => {
     const urlState = parseQuery(location.search);
-    const transform = getTransformFromView(urlState.view, width, height);
+    const transform = getTransformFromView(urlState.view, $width, $height);
     return {
       transform
     };
   };
+
+  // $: (() => {
+  //   const view = getViewFromTransform($transform, $width, $height);
+  //   console.log(view);
+  //   history.pushState(null, "", `?${stringifyQuery({ view })}`);
+  // })();
+
+  onMount(() => {
+    const urlState = urlToState();
+    //$currentTransform = urlState.transform;
+    $transform = urlState.transform;
+
+    window.addEventListener("popstate", e => {
+      //console.log(e);
+      const urlState = urlToState();
+    });
+  });
 
   const handleClick = view => {
     $transform = getTransformFromView(view, $width, $height);

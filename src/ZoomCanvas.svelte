@@ -27,8 +27,21 @@
 
   onMount(async () => {
     const selection = d3Select(zoomable);
-    selection.call(zoom).call(zoom.transform, $transform);
+    selection.call(zoom).call(zoom.transform, $currentTransform);
   });
+
+  $: (() => {
+    if (!zoomable) return;
+    const nodeTransform = d3ZoomTransform(zoomable);
+    if (
+      nodeTransform.k === $currentTransform.k &&
+      nodeTransform.x === $currentTransform.x &&
+      nodeTransform.y === $currentTransform.y
+    ) {
+      return;
+    }
+    d3Select(zoomable).call(zoom.transform, $currentTransform);
+  })();
 
   $: (() => {
     if (!zoomable) return;
@@ -70,15 +83,17 @@
   bind:this={zoomable}
   bind:clientWidth={$width}
   bind:clientHeight={$height}>
-  <CanvasLayer
-    transform={$currentTransform}
-    width={$width}
-    height={$height}
-    children={clusters} />
-  <!-- <SvgLayer {width} {height} {transform} /> -->
-  <HtmlLayer
-    width={$width}
-    height={$height}
-    transform={$currentTransform}
-    children={clusters} />
+  {#if $currentTransform}
+    <CanvasLayer
+      transform={$currentTransform}
+      width={$width}
+      height={$height}
+      children={clusters} />
+    <!-- <SvgLayer {width} {height} {transform} /> -->
+    <HtmlLayer
+      width={$width}
+      height={$height}
+      transform={$currentTransform}
+      children={clusters} />
+  {/if}
 </div>
