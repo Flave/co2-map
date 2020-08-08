@@ -15,12 +15,17 @@
   import { interpolateZoom as d3InterpolateZoom } from "d3-interpolate";
   import { select as d3Select, event as d3Event } from "d3-selection";
   import ZoomCanvas from "./ZoomCanvas";
+  import Router from "./Router";
   import {
     selection,
     targetTransform,
     transform,
     width,
-    height
+    height,
+    canvasItems,
+    selectedItem,
+    reference,
+    referenceItem
   } from "./state";
 
   const levels = [
@@ -50,34 +55,36 @@
     }
   ];
 
-  const urlToState = () => {
-    const urlState = parseQuery(location.search);
-    $targetTransform = getTransformFromView(urlState.view, $width, $height);
-    $selection = urlState.selection;
-  };
-
-  // Reactively upate url when any relevant state changes
-  $: (() => {
-    if (!$targetTransform) return;
-    const view = getViewFromTransform($targetTransform, $width, $height);
-    const queryString = `?${stringifyQuery({ view, selection: $selection })}`;
-    if (queryString !== location.search) {
-      history.pushState(null, "", queryString);
-    }
-  })();
-
-  onMount(() => {
-    // Parse state from url
-    urlToState();
-
-    window.addEventListener("popstate", e => {
-      urlToState();
-    });
-  });
-
   const handleClick = view => {
     $targetTransform = getTransformFromView(view, $width, $height);
   };
+
+  // Reactively upate url when any relevant state changes
+  $: queryParams = (() => {
+    if (!$targetTransform) return;
+    const view = getViewFromTransform($targetTransform, $width, $height);
+    return { view, reference: $reference };
+  })();
+
+  $: (() => {
+    if (!$selectedItem) return;
+    $targetTransform = getTransformFromView(
+      [$selectedItem.canvasX, $selectedItem.canvasY, 100],
+      $width,
+      $height
+    );
+  })();
+
+  const handleUrlChange = ({ detail }) => {
+    $reference = detail.reference;
+    $targetTransform = getTransformFromView(detail.view, $width, $height);
+  };
+
+  const handleUrlLoad = ({ detail }) => {
+    $reference = detail.reference;
+    $transform = getTransformFromView(detail.view, $width, $height);
+  };
+  $: console.log($referenceItem);
 </script>
 
 <style>
@@ -96,9 +103,37 @@
     border: none;
     border-radius: 100px;
   }
+
+  .reference-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .reference {
+    border: 1px dotted red;
+    pointer-events: all;
+  }
 </style>
 
+<Router on:load={handleUrlLoad} on:change={handleUrlChange} {queryParams} />
+
 <ZoomCanvas />
+
+{#if $referenceItem}
+  <div class="reference-wrapper">
+    <div
+      on:click={() => ($reference = null)}
+      class="reference"
+      style={`width: ${$referenceItem.size * $transform.k}px; height: ${$referenceItem.size * $transform.k}px;`} />
+  </div>
+{/if}
+
 <div class="btns">
   {#each levels as level}
     <button class="btn" on:click={() => handleClick(level.view)}>

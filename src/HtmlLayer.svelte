@@ -1,13 +1,14 @@
 <script>
   import HtmlContainer from "./HtmlContainer";
-  import { selection } from "App/state";
+  import { selection, reference } from "App/state";
   export let transform;
   export let width;
   export let height;
   export let children;
 
   const handleSelect = id => {
-    selection.set(id);
+    $selection = id;
+    $reference = id;
   };
 </script>
 
@@ -41,8 +42,8 @@
   style={`transform: translate(${transform.x}px, ${transform.y}px) scale(${transform.k});`}>
   {#each children as { Html, id, meta, x, y, magnitude }}
     {#if Html}
-      <HtmlContainer {transform} {x} {y}>
-        <Html {transform} onSelect={handleSelect} />
+      <HtmlContainer {transform} {x} {y} {id}>
+        <Html {transform} {id} {magnitude} onSelect={handleSelect} />
       </HtmlContainer>
     {:else if meta}
       <div

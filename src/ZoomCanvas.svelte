@@ -9,7 +9,13 @@
   import SvgLayer from "./SvgLayer";
   import HtmlLayer from "./HtmlLayer";
 
-  import { targetTransform, transform, width, height } from "App/state";
+  import {
+    targetTransform,
+    transform,
+    selection,
+    width,
+    height
+  } from "App/state";
 
   let zoomable;
   let transitioning = false;
@@ -26,12 +32,13 @@
     });
 
   onMount(async () => {
-    const selection = d3Select(zoomable);
-    selection.call(zoom).call(zoom.transform, $transform);
+    d3Select(zoomable)
+      .call(zoom)
+      .call(zoom.transform, $transform);
   });
 
   $: (() => {
-    if (!zoomable) return;
+    if (!zoomable || !$transform) return;
     const nodeTransform = d3ZoomTransform(zoomable);
     if (
       nodeTransform.k === $transform.k &&
@@ -44,7 +51,7 @@
   })();
 
   $: (() => {
-    if (!zoomable) return;
+    if (!zoomable || !$targetTransform) return;
     const nodeTransform = d3ZoomTransform(zoomable);
     if (
       nodeTransform.k === $targetTransform.k &&

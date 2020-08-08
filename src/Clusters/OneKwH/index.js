@@ -1,4 +1,13 @@
+import { max } from "d3-array";
 import Html from "./Html";
+import { canvasItems } from "App/state";
+const gap = 2;
+const spec = {
+  id: "1kwh",
+  Html,
+  x: 20,
+  y: 20,
+};
 
 export const data = [
   { id: "1kwh-coal", label: "Coal – PC", x: 0, y: 0, value: 820 },
@@ -31,12 +40,25 @@ export const data = [
     y: 0,
     value: 17,
   },
-];
+]
+  .sort((a, b) => a.value - b.value)
+  .reduce((items, item) => {
+    const size = Math.sqrt(item.value);
+    const prev = items[items.length - 1];
+    const x = prev ? prev.x + prev.size + gap : 0;
+    items.push({
+      ...item,
+      size,
+      x,
+      canvasX: x + spec.x,
+      canvasY: item.y + spec.y,
+    });
+    return items;
+  }, []);
 
-export default {
-  id: "1kwh",
-  data,
-  Html,
-  x: 20,
-  y: 20,
-};
+canvasItems.addItems(data);
+console.log(data);
+export const width = data.reduce((sum, item) => sum + item.size + gap, 0);
+export const height = max(data, (i) => i.size);
+
+export default { ...spec, data };

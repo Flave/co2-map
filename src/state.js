@@ -1,45 +1,34 @@
 import { writable, derived } from "svelte/store";
 import { zoomIdentity as d3ZoomIdentity } from "d3-zoom";
-import {
-  parseQuery,
-  stringifyQuery,
-  getViewFromTransform,
-  getTransformFromView,
-} from "Utils";
 
 export const width = writable(window.innerWidth);
 export const height = writable(window.innerHeight);
 
-export const selection = writable(null);
 // Used for target transform
 export const targetTransform = writable(null);
-export const transform = writable(d3ZoomIdentity.scale(0.1));
+export const transform = writable(null);
 
-// export const view = writable([0, 0, 100]);
-// export const transform = derived(
-//   [view, width, height],
-//   ([$view, $width, $height]) => getTransformFromView($view, $width, $height)
-// );
+export const canvasItems = (() => {
+  const { subscribe, set, update } = writable([]);
 
-// export const currentView = writable([0, 0, 100]);
-// export const currentTransform = derived(
-//   [currentView, width, height],
-//   ([$currentView, $width, $height]) =>
-//     getTransformFromView($currentView, $width, $height)
-// );
-// export const dimensions = readable(
-//   {
-//     width: window.innerWidth,
-//     height: window.innerHeight,
-//   },
-//   function start(set) {
-//     window.addEventListener('resize')
-//     const interval = setInterval(() => {
-//       set(new Date());
-//     }, 1000);
+  return {
+    subscribe,
+    addItems: (newItems) => update((items) => [...items, ...newItems]),
+  };
+})();
 
-//     return function stop() {
-//       clearInterval(interval);
-//     };
-//   }
-// );
+export const selection = writable(null);
+export const selectedItem = derived(
+  [canvasItems, selection],
+  ([$canvasItems, $selection]) => {
+    return $canvasItems.find((item) => item.id === $selection);
+  }
+);
+
+export const reference = writable(null);
+export const referenceItem = derived(
+  [canvasItems, reference],
+  ([$canvasItems, $reference]) => {
+    return $canvasItems.find((item) => item.id === $reference);
+  }
+);

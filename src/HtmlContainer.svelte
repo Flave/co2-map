@@ -1,18 +1,20 @@
 <script>
   import { onMount, tick } from "svelte";
   import { fade } from "svelte/transition";
+  import { canvasItems } from "App/state";
   export let x;
   export let y;
+  export let id;
   export let transform;
   let rootRef;
 
   let width = 0;
   let height = 0;
 
-  onMount(async () => {
-    await tick();
+  onMount(() => {
     width = rootRef.clientWidth;
     height = rootRef.clientHeight;
+    canvasItems.addItems([{ id, width, height }]);
   });
 
   //$: console.log(width, height);

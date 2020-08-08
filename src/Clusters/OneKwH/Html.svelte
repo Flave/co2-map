@@ -1,23 +1,10 @@
 <script>
-  import { max } from "d3-array";
-  import { data } from "./index";
+  import { data, width, height } from "./index";
   import { fade } from "svelte/transition";
   import { onMount } from "svelte";
   export let transform;
   export let onSelect;
-  const gap = 2;
-  const items = data
-    .sort((a, b) => a.value - b.value)
-    .reduce((items, item) => {
-      const size = Math.sqrt(item.value);
-      const prev = items[items.length - 1];
-      const x = prev ? prev.x + prev.size + gap : 0;
-      items.push({ ...item, size, x });
-      return items;
-    }, []);
-
-  const width = items.reduce((sum, item) => sum + item.size + gap, 0);
-  const height = max(items, i => i.size);
+  export let id;
 </script>
 
 <style>
@@ -50,19 +37,19 @@
   }
 </style>
 
-<h3 transition:fade class="title">
+<h3 transition:fade class="title" on:click={() => onSelect(id)}>
   Life-cycle greenhouse gas emissions of energy sources per 1kWh
 </h3>
 <div class="content">
   <svg {width} {height}>
-    {#each items as item}
+    {#each data as item}
       <g transform={`translate(${item.x}, 0)`}>
         <rect class="block" width={item.size} height={item.size} />
       </g>
     {/each}
   </svg>
   <div class="labels">
-    {#each items as item, i}
+    {#each data as item, i}
       {#if transform.k >= 2}
         <div
           transition:fade
