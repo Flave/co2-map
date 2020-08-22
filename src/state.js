@@ -1,12 +1,19 @@
 import { writable, derived } from "svelte/store";
 import { zoomIdentity as d3ZoomIdentity } from "d3-zoom";
 
+// export const defaultState = {
+//   transform: d3ZoomIdentity,
+//   targetTransform: d3ZoomIdentity,
+// };
+
 export const width = writable(window.innerWidth);
 export const height = writable(window.innerHeight);
 
+export const initialized = writable(false);
+
 // Used for target transform
-export const targetTransform = writable(null);
-export const transform = writable(null);
+export const targetTransform = writable(d3ZoomIdentity);
+export const transform = writable(d3ZoomIdentity);
 
 export const canvasItems = (() => {
   const { subscribe, set, update } = writable([]);

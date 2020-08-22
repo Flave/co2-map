@@ -1,13 +1,16 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount, createEventDispatcher, tick } from "svelte";
   import { parseQuery, stringifyQuery, getViewFromTransform } from "Utils";
   export let queryParams;
 
   const dispatch = createEventDispatcher();
+  let mounted = false;
 
   // Reactively upate url when any relevant state changes
-  $: (() => {
-    if (!queryParams) return;
+  $: (async () => {
+    // prevents updating the url unnecessarily after mounted being set to "true"
+    await tick();
+    if (!queryParams || !mounted) return;
     const filteredParams = Object.entries(queryParams).reduce(
       (params, [key, value]) => {
         if (value) params[key] = value;
@@ -29,7 +32,11 @@
     window.addEventListener("popstate", e => {
       dispatch("change", parseQuery(location.search));
     });
+
+    mounted = true;
   });
 </script>
 
-<slot />
+{#if mounted}
+  <slot />
+{/if}

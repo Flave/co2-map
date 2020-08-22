@@ -57,7 +57,6 @@ export const data = [
   }, []);
 
 canvasItems.addItems(data);
-console.log(data);
 export const width = data.reduce((sum, item) => sum + item.size + gap, 0);
 export const height = max(data, (i) => i.size);
 

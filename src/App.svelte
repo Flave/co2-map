@@ -7,16 +7,10 @@
     getTransformFromView
   } from "Utils";
   import { tweened } from "svelte/motion";
-  import {
-    zoom as d3Zoom,
-    zoomTransform as d3ZoomTransform,
-    zoomIdentity as d3ZoomIdentity
-  } from "d3-zoom";
-  import { interpolateZoom as d3InterpolateZoom } from "d3-interpolate";
-  import { select as d3Select, event as d3Event } from "d3-selection";
   import ZoomCanvas from "./ZoomCanvas";
   import Router from "./Router";
   import {
+    initialized,
     selection,
     targetTransform,
     transform,
@@ -27,6 +21,10 @@
     reference,
     referenceItem
   } from "./state";
+  import CanvasLayer from "./PixiLayer";
+  import SvgLayer from "./SvgLayer";
+  import HtmlLayer from "./HtmlLayer";
+  import clusters from "./clusters";
 
   const levels = [
     {
@@ -56,7 +54,7 @@
   ];
 
   const handleClick = view => {
-    $targetTransform = getTransformFromView(view, $width, $height);
+    $targetTransform = getTransformFromView(view, $width, $height, true);
   };
 
   // Reactively upate url when any relevant state changes
@@ -77,14 +75,20 @@
 
   const handleUrlChange = ({ detail }) => {
     $reference = detail.reference;
-    $targetTransform = getTransformFromView(detail.view, $width, $height);
+    $targetTransform = getTransformFromView(
+      detail.view,
+      $width,
+      $height,
+      false
+    );
   };
 
   const handleUrlLoad = ({ detail }) => {
-    $reference = detail.reference;
-    $transform = getTransformFromView(detail.view, $width, $height);
+    $reference = detail.reference || $reference;
+    $targetTransform =
+      getTransformFromView(detail.view, $width, $height) || $targetTransform;
+    $initialized = true;
   };
-  $: console.log($referenceItem);
 </script>
 
 <style>
@@ -121,23 +125,40 @@
   }
 </style>
 
-<Router on:load={handleUrlLoad} on:change={handleUrlChange} {queryParams} />
+<Router on:load={handleUrlLoad} on:change={handleUrlChange} {queryParams}>
+  <ZoomCanvas
+    targetTransform={$targetTransform}
+    width={window.innerWidth}
+    height={window.innerHeight}
+    on:zoom={event => ($transform = event.detail)}
+    on:zoomEnd={event => ($targetTransform = event.detail)}>
+    <CanvasLayer
+      transform={$transform}
+      with={$width}
+      height={$height}
+      children={clusters} />
+    <!-- <SvgLayer {width} {height} {transform} /> -->
+    <HtmlLayer
+      transform={$transform}
+      with={$width}
+      height={$height}
+      children={clusters} />
+  </ZoomCanvas>
 
-<ZoomCanvas />
+  {#if $referenceItem}
+    <div class="reference-wrapper">
+      <div
+        on:click={() => ($reference = null)}
+        class="reference"
+        style={`width: ${$referenceItem.size * $transform.k}px; height: ${$referenceItem.size * $transform.k}px;`} />
+    </div>
+  {/if}
 
-{#if $referenceItem}
-  <div class="reference-wrapper">
-    <div
-      on:click={() => ($reference = null)}
-      class="reference"
-      style={`width: ${$referenceItem.size * $transform.k}px; height: ${$referenceItem.size * $transform.k}px;`} />
+  <div class="btns">
+    {#each levels as level}
+      <button class="btn" on:click={() => handleClick(level.view)}>
+        {level.label}
+      </button>
+    {/each}
   </div>
-{/if}
-
-<div class="btns">
-  {#each levels as level}
-    <button class="btn" on:click={() => handleClick(level.view)}>
-      {level.label}
-    </button>
-  {/each}
-</div>
+</Router>

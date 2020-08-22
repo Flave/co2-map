@@ -1,78 +1,68 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, afterUpdate, createEventDispatcher } from "svelte";
   import { getViewFromTransform, getTransformFromView } from "Utils";
   import { zoom as d3Zoom, zoomTransform as d3ZoomTransform } from "d3-zoom";
   import { interpolateZoom as d3InterpolateZoom } from "d3-interpolate";
   import { select as d3Select, event as d3Event } from "d3-selection";
-  import clusters from "./clusters";
-  import CanvasLayer from "./PixiLayer";
-  import SvgLayer from "./SvgLayer";
-  import HtmlLayer from "./HtmlLayer";
 
-  import {
-    targetTransform,
-    transform,
-    selection,
-    width,
-    height
-  } from "App/state";
+  //import { targetTransform, transform, width, height } from "App/state";
+
+  export let targetTransform;
+  export let width;
+  export let height;
+
+  const dispatch = createEventDispatcher();
+
+  let lastTransform = targetTransform;
 
   let zoomable;
-  let transitioning = false;
 
-  const zoom = d3Zoom()
-    .scaleExtent([0.00001, 14])
+  const isSameTransform = (t1, t2) =>
+    t1.x === t2.x && t1.y === t2.y && t1.k === t2.k;
+
+  const zoomBehavior = d3Zoom()
+    .scaleExtent([0.00001, 40])
     .on("zoom", () => {
-      $transform = d3Event.transform;
+      dispatch("zoom", d3Event.transform);
     })
     .on("end", () => {
       // needed because
-      if (transitioning) return;
-      $targetTransform = d3Event.transform;
+      dispatch("zoomEnd", d3Event.transform);
     });
 
   onMount(async () => {
     d3Select(zoomable)
-      .call(zoom)
-      .call(zoom.transform, $transform);
+      .call(zoomBehavior)
+      .call(zoomBehavior.transform, targetTransform);
   });
 
-  $: (() => {
-    if (!zoomable || !$transform) return;
-    const nodeTransform = d3ZoomTransform(zoomable);
-    if (
-      nodeTransform.k === $transform.k &&
-      nodeTransform.x === $transform.x &&
-      nodeTransform.y === $transform.y
-    ) {
-      return;
-    }
-    d3Select(zoomable).call(zoom.transform, $transform);
-  })();
+  afterUpdate(() => {
+    if (!isSameTransform(targetTransform, lastTransform))
+      lastTransform = targetTransform;
+  });
 
+  // Reactively update zoom transform if a new transform was set from outside
   $: (() => {
-    if (!zoomable || !$targetTransform) return;
+    if (!zoomable || !targetTransform) return;
+    // Prevent update on every transition step
+    if (isSameTransform(targetTransform, lastTransform)) return;
     const nodeTransform = d3ZoomTransform(zoomable);
-    if (
-      nodeTransform.k === $targetTransform.k &&
-      nodeTransform.x === $targetTransform.x &&
-      nodeTransform.y === $targetTransform.y
-    ) {
-      return;
-    }
-    // needed because otherwise it will keep playing for another couple of frames
-    // which messes up the equality check...
+    // prevent infinite loop
+    if (isSameTransform(targetTransform, nodeTransform)) return;
+    // Interrupt current transition if there's already a new one coming...apparently has to be called manually
     d3Select(zoomable).interrupt();
-    const zoomIn = nodeTransform.k < $targetTransform.k;
-    let scaleRatio = $targetTransform.k / nodeTransform.k;
-    if (!zoomIn) scaleRatio = 1 / scaleRatio;
-    const duration = Math.pow(scaleRatio, 0.16) * 400;
-    d3Select(zoomable)
-      .transition()
-      .on("start", () => (transitioning = true))
-      .on("end", () => (transitioning = false))
-      .duration(duration)
-      .call(zoom.transform, $targetTransform);
+    if (targetTransform.transition) {
+      const zoomIn = nodeTransform.k < targetTransform.k;
+      let scaleRatio = targetTransform.k / nodeTransform.k;
+      if (!zoomIn) scaleRatio = 1 / scaleRatio;
+      const duration = Math.pow(scaleRatio, 0.16) * 400;
+      d3Select(zoomable)
+        .transition()
+        .duration(1000)
+        .call(zoomBehavior.transform, targetTransform);
+    } else {
+      d3Select(zoomable).call(zoomBehavior.transform, targetTransform);
+    }
   })();
 </script>
 
@@ -88,19 +78,7 @@
 <div
   class="container"
   bind:this={zoomable}
-  bind:clientWidth={$width}
-  bind:clientHeight={$height}>
-  {#if $transform}
-    <CanvasLayer
-      transform={$transform}
-      width={$width}
-      height={$height}
-      children={clusters} />
-    <!-- <SvgLayer {width} {height} {transform} /> -->
-    <HtmlLayer
-      width={$width}
-      height={$height}
-      transform={$transform}
-      children={clusters} />
-  {/if}
+  bind:clientWidth={width}
+  bind:clientHeight={height}>
+  <slot />
 </div>
