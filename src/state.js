@@ -12,8 +12,8 @@ export const height = writable(window.innerHeight);
 export const initialized = writable(false);
 
 // Used for target transform
-export const targetTransform = writable(d3ZoomIdentity);
 export const transform = writable(d3ZoomIdentity);
+export const currentTransform = writable(d3ZoomIdentity);
 
 export const canvasItems = (() => {
   const { subscribe, set, update } = writable([]);

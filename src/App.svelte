@@ -12,8 +12,8 @@
   import {
     initialized,
     selection,
-    targetTransform,
     transform,
+    currentTransform,
     width,
     height,
     canvasItems,
@@ -54,19 +54,19 @@
   ];
 
   const handleClick = view => {
-    $targetTransform = getTransformFromView(view, $width, $height, true);
+    $transform = getTransformFromView(view, $width, $height);
   };
 
   // Reactively upate url when any relevant state changes
   $: queryParams = (() => {
-    if (!$targetTransform) return;
-    const view = getViewFromTransform($targetTransform, $width, $height);
+    if (!$transform) return;
+    const view = getViewFromTransform($transform, $width, $height);
     return { view, reference: $reference };
   })();
 
   $: (() => {
     if (!$selectedItem) return;
-    $targetTransform = getTransformFromView(
+    $transform = getTransformFromView(
       [$selectedItem.canvasX, $selectedItem.canvasY, 100],
       $width,
       $height
@@ -75,18 +75,13 @@
 
   const handleUrlChange = ({ detail }) => {
     $reference = detail.reference;
-    $targetTransform = getTransformFromView(
-      detail.view,
-      $width,
-      $height,
-      false
-    );
+    $transform = getTransformFromView(detail.view, $width, $height);
   };
 
   const handleUrlLoad = ({ detail }) => {
     $reference = detail.reference || $reference;
-    $targetTransform =
-      getTransformFromView(detail.view, $width, $height) || $targetTransform;
+    $transform =
+      getTransformFromView(detail.view, $width, $height) || $transform;
     $initialized = true;
   };
 </script>
@@ -127,19 +122,19 @@
 
 <Router on:load={handleUrlLoad} on:change={handleUrlChange} {queryParams}>
   <ZoomCanvas
-    targetTransform={$targetTransform}
+    transform={$transform}
     width={window.innerWidth}
     height={window.innerHeight}
-    on:zoom={event => ($transform = event.detail)}
-    on:zoomEnd={event => ($targetTransform = event.detail)}>
+    on:zoom={event => ($currentTransform = event.detail)}
+    on:zoomEnd={event => ($transform = event.detail)}>
     <CanvasLayer
-      transform={$transform}
+      transform={$currentTransform}
       with={$width}
       height={$height}
       children={clusters} />
     <!-- <SvgLayer {width} {height} {transform} /> -->
     <HtmlLayer
-      transform={$transform}
+      transform={$currentTransform}
       with={$width}
       height={$height}
       children={clusters} />
@@ -150,7 +145,7 @@
       <div
         on:click={() => ($reference = null)}
         class="reference"
-        style={`width: ${$referenceItem.size * $transform.k}px; height: ${$referenceItem.size * $transform.k}px;`} />
+        style={`width: ${$referenceItem.size * $currentTransform.k}px; height: ${$referenceItem.size * $currentTransform.k}px;`} />
     </div>
   {/if}
 

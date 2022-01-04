@@ -5,17 +5,15 @@
   import { interpolateZoom as d3InterpolateZoom } from "d3-interpolate";
   import { select as d3Select, event as d3Event } from "d3-selection";
 
-  //import { targetTransform, transform, width, height } from "App/state";
-
-  export let targetTransform;
+  export let transform;
   export let width;
   export let height;
 
   const dispatch = createEventDispatcher();
 
-  let lastTransform = targetTransform;
+  let lastTransform = transform;
 
-  let zoomable;
+  let zoomElement;
 
   const isSameTransform = (t1, t2) =>
     t1.x === t2.x && t1.y === t2.y && t1.k === t2.k;
@@ -31,37 +29,36 @@
     });
 
   onMount(async () => {
-    d3Select(zoomable)
+    d3Select(zoomElement)
       .call(zoomBehavior)
-      .call(zoomBehavior.transform, targetTransform);
+      .call(zoomBehavior.transform, transform);
   });
 
   afterUpdate(() => {
-    if (!isSameTransform(targetTransform, lastTransform))
-      lastTransform = targetTransform;
+    if (!isSameTransform(transform, lastTransform)) lastTransform = transform;
   });
 
   // Reactively update zoom transform if a new transform was set from outside
   $: (() => {
-    if (!zoomable || !targetTransform) return;
+    if (!zoomElement || !transform) return;
     // Prevent update on every transition step
-    if (isSameTransform(targetTransform, lastTransform)) return;
-    const nodeTransform = d3ZoomTransform(zoomable);
+    if (isSameTransform(transform, lastTransform)) return;
+    const nodeTransform = d3ZoomTransform(zoomElement);
     // prevent infinite loop
-    if (isSameTransform(targetTransform, nodeTransform)) return;
+    if (isSameTransform(transform, nodeTransform)) return;
     // Interrupt current transition if there's already a new one coming...apparently has to be called manually
-    d3Select(zoomable).interrupt();
-    if (targetTransform.transition) {
-      const zoomIn = nodeTransform.k < targetTransform.k;
-      let scaleRatio = targetTransform.k / nodeTransform.k;
+    d3Select(zoomElement).interrupt();
+    if (transform.transition) {
+      const zoomIn = nodeTransform.k < transform.k;
+      let scaleRatio = transform.k / nodeTransform.k;
       if (!zoomIn) scaleRatio = 1 / scaleRatio;
       const duration = Math.pow(scaleRatio, 0.16) * 400;
-      d3Select(zoomable)
+      d3Select(zoomElement)
         .transition()
         .duration(1000)
-        .call(zoomBehavior.transform, targetTransform);
+        .call(zoomBehavior.transform, transform);
     } else {
-      d3Select(zoomable).call(zoomBehavior.transform, targetTransform);
+      d3Select(zoomElement).call(zoomBehavior.transform, transform);
     }
   })();
 </script>
@@ -77,7 +74,7 @@
 
 <div
   class="container"
-  bind:this={zoomable}
+  bind:this={zoomElement}
   bind:clientWidth={width}
   bind:clientHeight={height}>
   <slot />
